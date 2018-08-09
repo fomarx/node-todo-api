@@ -1,5 +1,6 @@
 const _ = require('lodash');
-const express  = require('express');
+const validator  = require('validator'); 
+const express    = require('express');
 const bodyParser = require('body-parser');
 const {ObjectID} = require('mongodb');
 
@@ -11,6 +12,7 @@ var app = express();
 
 app.use(bodyParser.json());
 const port = process.env.PORT || 3000;
+
 
 app.post('/todos', (req, res) => {
     var todo = new Todo({
@@ -65,7 +67,7 @@ app.delete('/todos/:id', (req, res) => {
     }).catch(e => {
         res.status(400).send();
     })
-})
+});
 
 app.patch('/todos/:id', (req, res) => {
     let id = req.params.id;
@@ -91,8 +93,21 @@ app.patch('/todos/:id', (req, res) => {
     }).catch(e => {
         res.status(400).send();
     })
+});
 
-})
+app.post('/users', (req, res) => {
+    let body = _.pick(req.body, ['email', 'password']);
+    let user = new User(body);
+
+    user.save().then(() => {
+        return user.generateAuthToken();
+        // res.send(user);
+    }).then(token => {
+        res.header('x-auth', token).send(user);
+    }).catch(e => {
+        res.status(400).send(e);
+    })
+});
 
 app.listen(port, () => {
     console.log(`Server's up at port ${port}`);
